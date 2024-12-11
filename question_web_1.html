@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目查询</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* 页面布局：左右两栏 */
+        .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 通用按钮样式 */
+        .btn {
+            width: 100px;
+            height: 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            background-color: #171717;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: all .4s;
+        }
+        .btn-small {
+            width: 70px;
+            height: 25px;
+            font-size: 0.9em;
+        }
+
+        .btn:hover {
+            border-radius: 5px;
+            transform: translateY(-10px);
+            box-shadow: 0 7px 0 -2px #f85959,
+                        0 15px 0 -4px #39a2db,
+                        0 16px 10px -3px #39a2db;
+        }
+
+        .btn:active {
+            transition: all 0.2s;
+            transform: translateY(-5px);
+            box-shadow: 0 2px 0 -2px #f85959,
+                        0 8px 0 -4px #39a2db,
+                        0 12px 10px -3px #39a2db;
+        }
+
+         /* 左侧 SQL 查询部分 */
+         .left-column {
+            width: 25%; /* 左侧占 1/4 */
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            height: 100vh; /* 设置高度为视口高度 */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto; /* 添加垂直滚动条 */
+        }
+
+        /* 左侧标题 */
+        .left-column h1 {
+            font-size: 20px;
+            color: #333;
+            text-align: center; /* 居左 */
+            margin-bottom: 20px;
+        }
+
+        /* 左侧搜索*/
+        .search-container {
+            align-self: stretch; /* 使其宽度占满父容器 */
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            box-sizing: border-box; /* 确保内边距不会增加宽度 */
+        }
+
+        .search-container input[type="text"] {
+            flex-grow: 1; /* 使输入框自动扩展占满可用空间 */
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .btn-small {
+            margin-left: 10px;
+            flex-shrink: 0; /* 按钮保持固定宽度 */
+        }
+
+        /* 左侧的空白项目框 */
+        .answer-box {
+            margin-top: 20px;
+            background-color: #fdfdfd;
+            padding: 15px 15px;
+            margin: 10px ;
+            border-radius: 5px;
+            word-wrap: break-word; /* 保证长单词会换行 */
+            white-space: normal;  /* 允许自动换行 */
+            overflow: hidden; /* 防止溢出 */
+            display: flex;
+            flex-direction: column;
+
+            height: 150px; /* 调整高度以适应内容 */
+            justify-content: center;
+            align-items: center; /* 水平居中 */
+            position: relative;
+            transition: all .4s;
+        }
+
+        .answer-box::before {
+            letter-spacing: 0.2em;
+            position: absolute;
+            bottom: 8px;
+            left: 20px;
+            color: rgb(51, 51, 51);
+            font-size: 0.8em;
+            font-weight: 700;
+        }
+
+        .answer-box div {
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.212);
+            cursor: pointer;
+            z-index: 10;
+            transition: all .4s;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center; /* 水平居中 */
+            padding: 10px;
+            background: linear-gradient(135deg, hsla(114, 100%, 92%, 0.237),#ffffff99, #28fff825); /* 渐变色背景 */
+        }
+
+        .answer-box h3 {
+            margin: 2px;
+            color: #555;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .answer-box p {
+            margin: 5px 0 0;
+            font-size: 10px;
+            color: #555;
+        }
+
+        .answer-box a {
+            margin-top: auto;
+            font-size: 9px;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            color: #39a2db;
+        }
+
+        .answer-box:hover div {
+            transform: translateY(-30px);
+        }
+
+        /* 右侧部分 */
+        .right-column {
+            background-color: #fff;
+            width: 75%; /* 右侧占 3/4 */
+            padding: 20px;
+            height: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* 右侧标题 */
+        .right-column h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* RAG对话框样式 */
+        .rag-dialog-container {
+            background: linear-gradient(135deg, hsla(114, 100%, 92%, 0.237), #ffffff99, #28fff825); /* 渐变色背景 */
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-height:auto;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            flex-grow: 1; /* 让聊天内容区域占满剩余空间 */
+            position: relative; /* 使内部元素可以相对定位 */
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background-color: #f1f1f1;
+            max-width: 80%;
+        }
+
+        .message.user {
+            background-color: #656565;
+            color: white;
+            align-self: flex-end;
+            border-radius: 8px 8px 0 8px;
+        }
+
+        .message.robot {
+            background-color: #f2f2f2;
+            color: black;
+            align-self: flex-start;
+            border-radius: 8px 8px 8px 0;
+        }
+
+        .message .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .message.avatar.robot {
+            background-color: #f85959; /* 机器人头像红色 */
+        }
+
+        .avatar.user {
+            background-color: #39a2db; /* 用户头像蓝色 */
+        }
+
+        .message .text {
+            max-width: 80%;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* 提问输入框和按钮位于底部 */
+        .input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: absolute;
+            bottom: 30px; /* 固定底部 */
+            left: 0;
+            right: 0;
+            padding: 10px;
+            border-radius: 8px;;
+            background: linear-gradient(135deg, hsla(114, 100%, 92%, 0.558), #ffffff99, #28fff85c); /* 渐变色背景 */
+            max-width: 90%; /* 确保不超过父容器的宽度 */
+            margin: auto; /* 居中对齐 */
+            box-sizing: border-box; /* 确保内边距不会增加宽度 */
+        }
+
+        .input-container input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-width: 90%; /* 确保不超过父容器的宽度 */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 左侧 SQL 查询部分 -->
+        <div class="left-column">
+            <h1>项目查询</h1>
+            <div class="search-container">
+                <input type="text" id="question" placeholder="试试：总建筑面积在300平方米到600平方米且在上海的项目？" />
+                <button class="btn btn-small" onclick="askQuestion()">查询</button>
+            </div>
+
+            <div id="error-message-container"></div>
+
+            <!-- 这里是5个空白的项目框 -->
+            <div id="answer-container">
+                <div class="answer-box">
+                    <div>
+                        <h3>安徽省美术馆</h3>
+                        <p> 北京市建筑设计研究院股份有限公司 + 王戈工作室设计，展览类建筑, 文化建筑, 美术馆</p>
+                        <a href="https://www.gooood.cn/anhui-art-museum-by-biad-wangge.htm">了解更多</a>
+                    </div>
+                </div>
+                <div class="answer-box">
+                    <div>
+                        <h3>扬州世园会深圳展园“共生之环” </h3>
+                        <p>深圳市方行设计与发展有限公司。</p>
+                        <a href="https://www.gooood.cn/shenzhen-garden-symbiotic-ring-of-2021-yangzhou-international-by-shenzhen-ace-design-and-development-co-ltd.htm">了解更多</a>
+                    </div>
+                </div>
+                <div class="answer-box">
+                    <div>
+                        <h3>Kitsunya酒馆</h3>
+                        <p>基辅 / Nastia Mirzoyan</p>
+                        <a href="https://www.gooood.cn/kitsunya-by-nastia-mirzoyan.htm">了解更多</a>
+                    </div>
+                </div>
+                <div class="answer-box">
+                    <div>
+                        <h3>上海格林新蕾市北幼儿园</h3>
+                        <p>华建集团，幼儿园, 教育建筑</p>
+                        <a href="https://www.gooood.cn/grin-sunray-kindergarten-by-arcplus.htm">了解更多</a>
+                    </div>
+                </div>
+                <div class="answer-box">
+                    <div>
+                        <h3>无锡国际会议中心</h3>
+                        <p>江苏 / Henning Larsen</p>
+                        <a href="https://www.gooood.cn/wuxi-conference-center-by-henning-larsen.htm">了解更多</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧 RAG 聊天框部分 -->
+        <div class="right-column">
+            <h2>🏠 || 项目详细可以在此询问小助手</h2>
+            <div class="rag-dialog-container" id="rag-dialog">
+                <div id="rag-messages"></div>
+            </div>
+
+            <!-- 提问输入框和按钮 -->
+            <div class="input-container">
+                <input type="text" id="rag-question" placeholder="你可以问更具体的问题如：安徽美术馆的设计理念是什么？ " />
+                <button class="btn" onclick="askRagQuestion()">提问</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function askQuestion() {
+            const question = document.getElementById("question").value;
+            if (!question) {
+                alert("请输入问题！");
+                return;
+            }
+
+            document.getElementById('error-message-container').innerHTML = '';
+
+            const response = await fetch('/ask', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question })
+            });
+
+            const data = await response.json();
+            const answerContainer = document.getElementById('answer-container');
+            answerContainer.innerHTML = ''; // 清空之前的答案框
+
+            if (data.error) {
+                displayErrorMessage("不好意思，这个问题我还在学习中 TAT");
+                return;
+            }
+
+            const answer = data.answer;
+            const answerList = answer.split('\n\n'); // 用两个换行符分隔每个项目的答案
+
+            // 逐个填充答案框
+            answerList.forEach((item, index) => {
+                const box = document.createElement('div');
+                box.classList.add('answer-box');
+                box.innerHTML = formatAnswer(item);
+                answerContainer.appendChild(box);
+            });
+        }
+
+        async function askRagQuestion() {
+            const ragQuestion = document.getElementById("rag-question").value;
+            if (!ragQuestion) {
+                alert("请输入问题！");
+                return;
+            }
+
+            // 显示用户的问题
+            appendRagMessage(ragQuestion, 'user');
+            document.getElementById("rag-question").value = ''; // 清空输入框
+
+            // 请求回答
+            const response = await fetch('/ask_rag', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ question: ragQuestion })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                appendRagMessage("不好意思，这个问题我还在学习中 TAT", 'robot');
+                return;
+            }
+
+            const ragAnswer = data.answer;
+            appendRagMessage(ragAnswer, 'robot');
+        }
+
+        function appendRagMessage(message, sender) {
+            const ragMessages = document.getElementById('rag-messages');
+            const messageBox = document.createElement('div');
+            messageBox.classList.add('message', sender);
+
+            const avatar = document.createElement('div');
+            avatar.classList.add('avatar', sender);
+            const avatarColor = sender === 'robot' ? '#FFEB3B' : '#4CAF50';
+            avatar.style.backgroundColor = avatarColor;
+
+            const textBox = document.createElement('div');
+            textBox.classList.add('text');
+            textBox.innerHTML = message;
+
+            messageBox.appendChild(avatar);
+            messageBox.appendChild(textBox);
+            ragMessages.appendChild(messageBox);
+
+            // 自动滚动到底部
+            ragMessages.scrollTop = ragMessages.scrollHeight;
+        }
+
+        function displayErrorMessage(message) {
+            const errorContainer = document.getElementById('error-message-container');
+            const errorMessage = document.createElement('div');
+            errorMessage.classList.add('error-message');
+            errorMessage.textContent = message;
+            errorContainer.appendChild(errorMessage);
+        }
+
+        function formatAnswer(answerText) {
+            const lines = answerText.split("\n");
+            let formattedAnswer = '';
+            let projectLink = '';
+            let projectImage = '';
+
+            lines.forEach(line => {
+                if (line.includes('项目链接:')) {
+                    const link = line.split('项目链接:')[1].trim();
+                    projectLink = `<a href="${link}" target="_blank">点击查看项目链接</a>`;
+                } else if (line.includes('项目图片链接:')) {
+                    const imgUrl = line.split('项目图片链接:')[1].trim();
+                    projectImage = `<img src="${imgUrl}" alt="项目图片">`;
+                } else if (line.includes(':')) {
+                    formattedAnswer += `<p><strong>${line}</strong></p>`;
+                } else {
+                    formattedAnswer += `<p>${line}</p>`;
+                }
+            });
+
+            if (projectLink) formattedAnswer += `<p>${projectLink}</p>`;
+            if (projectImage) formattedAnswer += projectImage;
+
+            return formattedAnswer;
+        }
+    </script>
+
+</body>
+</html>
